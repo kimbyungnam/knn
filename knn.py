@@ -15,6 +15,10 @@ def parsing(r_file):
     return features, label
 
 
+def k_fold(X,y, k=5):
+    return zip(np.split(X,k), np.split(y,k))
+
+
 class knnClasifier():
     train_data = np.empty(1)
     train_label = np.empty(1)
@@ -60,7 +64,7 @@ class knnClasifier():
         result = list()
         for i in labeling:
             counting = Counter(i)
-            result.append(counting.most_common(1)[0])
+            result.append(counting.most_common(1)[0][0])
 
         return np.array(result, dtype=int)
 
@@ -74,3 +78,53 @@ class knnClasifier():
     def euclidean(self,X,y):
         dist = np.sqrt(np.sum(np.power(abs(X-y),2),axis=1))
         return dist.T
+
+class validation():
+    predict = list()
+    label = list()
+    confusion_metric = list()
+    max_len = 0
+
+    def __init__(self, predict, label, max_len):
+        self.predict = predict
+        self.label = label
+        self.max_len = max_len
+        self.confusion_metric = np.zeros((max_len,max_len), dtype=int)
+        for i in range(len(predict)):
+            self.confusion_metric[int(self.label[i]), int(self.predict[i])] += 1
+
+
+    def prnt_cfm(self):
+        print self.confusion_metric
+
+
+    def recall(self):
+        vector = np.ones(self.max_len)
+        denominator = np.dot(self.confusion_metric, vector)
+        numerator = np.diag(self.confusion_metric)
+        pre_list = numerator/denominator
+        result = np.sum(pre_list)/self.max_len
+
+        return result
+
+
+    def precision(self):
+        vector = np.ones(self.max_len)
+        denominator = np.dot(self.confusion_metric.T, vector)
+        numerator = np.diag(self.confusion_metric)
+        pre_list = numerator/denominator
+        result = np.sum(pre_list)/self.max_len
+
+        return result
+
+    def F1_measure(self):
+        prec = self.precision()
+        rec = self.recall()
+
+        return 2*((prec*rec)/(prec+rec))
+
+    def accuracy(self):
+        denominator = np.sum(self.confusion_metric, dtype=float)
+        numerator = np.sum(np.diag(self.confusion_metric), dtype=float)
+
+        return numerator/denominator
