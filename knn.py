@@ -1,10 +1,6 @@
-from sklearn.neighbors import KNeighborsClassifier
 from collections import Counter
 import numpy as np
-import math
-import re
 
-from time import sleep
 
 def parsing(r_file):
     file_data = np.loadtxt(r_file, delimiter=',')
@@ -15,9 +11,20 @@ def parsing(r_file):
     return features, label
 
 
-def k_fold(X,y, k=5):
-    return zip(np.split(X,k), np.split(y,k))
-
+# def k_fold(X,y, k=5):
+#     return zip(np.split(X,k), np.split(y,k))
+def k_fold(X, k=5):
+    offset = int(len(X)/k)
+    result_train = list()
+    result_test =list()
+    for i in range(k):
+        test_list = [j for j in range(i*offset,int((i+1)*offset))]
+        index_list = [j for j in range(len(X))]
+        for t in range(offset):
+            index_list.remove(test_list[t])
+        result_train.append(index_list)
+        result_test.append(test_list)
+    return zip(result_train, result_test)
 
 class knnClasifier():
     train_data = np.empty(1)
@@ -49,7 +56,7 @@ class knnClasifier():
                 target_dist = self.manhattan(X[i],self.train_data)
             elif self.distance == 'L':
                 target_dist = self.L(X[i],self.train_data)
-            np_indices = np.argsort(target_dist)[:5]
+            np_indices = np.argsort(target_dist)[:self.n_neighbor]
             np_dist = np.take(target_dist, np_indices)
             result_dist.append(np_dist)
             result_indices.append(np_indices)
